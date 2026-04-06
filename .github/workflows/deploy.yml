@@ -1,42 +1,38 @@
-name: Deploy Blazor WebAssembly to Github Pages
+name: CI/CD Blazor WASM
 
 on:
   push:
-    branches:
-      - main # Ou sua branch escolhida
-
-permissions:
-  contents: write # Permite gravar o conteúdo do repositório
-  pages: write # Permite escrever na branch de pages
-  id-token: write # Necessário para autenticação OIDC (segurança)
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
 
 jobs:
-  deploy:
+  build-test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      
-      - name: Setup .NET Core
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: 9.0.x
-      
-      - name: Publish with dotnet
-        run: dotnet publish --configuration Release --output build
-      
-      - name: Change base-tag in index.html from / to repo name
-        run: sed -i 's|<base href="/" />|<base href="/${{GITHUB_REPO_NAME}}/" />|g' build/wwwroot/index.html
-        env:
-          GITHUB_REPO_NAME: ${{ github.event.repository.name }}
-
-      - name: Change base-tag in index.html from / to repo name
-        run: sed -i 's|<base href="/" />|<base href="/${{GITHUB_REPO_NAME}}/" />|g' build/wwwroot/index.html
-        env:
-          GITHUB_REPO_NAME: ${{ github.event.repository.name }}
-
-
-      - name: Commit wwwroot to GitHub Pages
-        uses: JamesIves/github-pages-deploy-action@3.7.1
-        with:
-          BRANCH: gh-pages
-          FOLDER: build/wwwroot
+    - uses: actions/checkout@v4
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'  # Ajuste se usar outra versão
+    
+    - name: Restore
+      run: dotnet restore ScreenSound.sln
+    
+    - name: Build
+      run: dotnet build ScreenSound.sln --configuration Release --no-restore
+    
+    - name: Test
+      run: dotnet test ScreenSound.sln --configuration Release --no-build --verbosity normal
+      # Adicione coverage se tiver: --collect:"XPlat Code Coverage"
+    
+    - name: Publish WASM
+      run: dotnet publish ScreenSound.WebAssembly/ScreenSound.WebAssembly.csproj --configuration Release --output ./publish --no-build
+    
+    - name: Deploy to GitHub Pages (opcional, só em main)
+      if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+      uses: peaceiris/actions-gh-pages@v4
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./publish/wwwroot
