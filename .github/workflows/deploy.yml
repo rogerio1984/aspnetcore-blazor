@@ -1,55 +1,18 @@
-name: CI/CD Blazor WASMS
-on:
-  push:
-    branches: [ main, develop ]
-  pull_request:
-    branches: [ main ]
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-jobs:
-  build-test:
-    runs-on: ubuntu-latest
-    environment: github-pages  # 👈 FIX: Essencial pro deploy-pages
-    env:
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Setup .NET 8
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: '8.0.x'
-    
-    - name: Restore workloads & packages
-      run: |
-        dotnet workload restore
-        dotnet restore ScreenSound.sln
-    
-    - name: Build
-      run: dotnet build ScreenSound.sln --configuration Release --no-restore
-    
-    - name: Test
-      run: dotnet test ScreenSound.sln --configuration Release --no-build --verbosity normal
-    
-    - name: Publish WASM
-      run: dotnet publish ScreenSound.WebAssembly/ScreenSound.WebAssembly.csproj --configuration Release --output ./publish --no-build -r browser-wasm -p:PublishTrimmed=false
-    
-    - name: Debug _framework
-      run: ls -la ./publish/wwwroot/_framework/ || echo "Pasta vazia"
-    
-    - name: Setup Pages
-      if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-      uses: actions/configure-pages@v5
-    
-    - name: Upload artifact
-      if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-      uses: actions/upload-pages-artifact@v3
-      with:
-        path: ./publish/wwwroot
-    
-    - name: Deploy GH Pages
-      if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-      uses: actions/deploy-pages@v4
+   <Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+     <PropertyGroup>
+       <TargetFramework>net8.0</TargetFramework>  <!-- 👈 Padrão, sem RID aqui -->
+       <Nullable>enable</Nullable>
+       <ImplicitUsings>enable</ImplicitUsings>
+       <PublishTrimmed>false</PublishTrimmed>
+       <RunAOTCompilation>false</RunAOTCompilation>
+     </PropertyGroup>
+     <ItemGroup>
+       <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="8.0.8" />
+       <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="8.0.8" PrivateAssets="all" />
+       <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.0" />
+     </ItemGroup>
+     <ItemGroup>
+       <ProjectReference Include="..\ScreenSound.Shared.Dados\ScreenSound.Shared.Dados.csproj" />
+       <ProjectReference Include="..\ScreenSound.Shared.Modelos\ScreenSound.Shared.Modelos.csproj" />
+     </ItemGroup>
+   </Project>
