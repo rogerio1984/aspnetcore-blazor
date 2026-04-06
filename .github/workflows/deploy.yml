@@ -1,5 +1,4 @@
 name: CI/CD Blazor WASM
-
 on:
   push:
     branches: [ main, develop ]
@@ -15,7 +14,10 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: '8.0.x'  # Ajuste se usar outra versão
+        dotnet-version: '8.0.x'
+    
+    - name: Install WASM Workload  # 👈 NOVO: Essencial pro Blazor WASM!
+      run: dotnet workload install wasm-tools --source https://aka.ms/dotnet8/nuget/index.json
     
     - name: Restore
       run: dotnet restore ScreenSound.sln
@@ -25,12 +27,11 @@ jobs:
     
     - name: Test
       run: dotnet test ScreenSound.sln --configuration Release --no-build --verbosity normal
-      # Adicione coverage se tiver: --collect:"XPlat Code Coverage"
     
     - name: Publish WASM
       run: dotnet publish ScreenSound.WebAssembly/ScreenSound.WebAssembly.csproj --configuration Release --output ./publish --no-build
     
-    - name: Deploy to GitHub Pages (opcional, só em main)
+    - name: Deploy to GitHub Pages (só em main)
       if: github.ref == 'refs/heads/main' && github.event_name == 'push'
       uses: peaceiris/actions-gh-pages@v4
       with:
