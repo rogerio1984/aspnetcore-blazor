@@ -50,4 +50,12 @@ jobs:
       if: github.ref == 'refs/heads/main' && github.event_name == 'push'
       uses: actions/configure-pages@v5
     
-    - name: Upload artifact (só main
+    - name: Upload artifact (só main)
+      if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: ./publish/wwwroot
+    
+    - name: Deploy to GH Pages (só main)
+      if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+      uses: actions/deploy-pages@v4
