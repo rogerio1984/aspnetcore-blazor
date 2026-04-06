@@ -4,7 +4,6 @@ on:
     branches: [ main, develop ]
   pull_request:
     branches: [ main ]
-
 permissions:
   contents: read
   pages: write
@@ -23,39 +22,33 @@ jobs:
       with:
         dotnet-version: '8.0.x'
     
-    - name: Restore workloads & packages  # Força WASM
+    - name: Restore workloads & packages
       run: |
         dotnet workload restore
         dotnet restore ScreenSound.sln
     
-    - name: Build solution
+    - name: Build
       run: dotnet build ScreenSound.sln --configuration Release --no-restore
     
-    - name: Test solution
+    - name: Test
       run: dotnet test ScreenSound.sln --configuration Release --no-build --verbosity normal
     
-    - name: Publish WASM client (com runtime)
-      run: |
-        dotnet publish ScreenSound.WebAssembly/ScreenSound.WebAssembly.csproj \
-          --configuration Release \
-          --output ./publish \
-          --no-build \
-          --self-contained false \
-          -r browser-wasm  # 👈 Força runtime WASM/JS
+    - name: Publish WASM  # 👈 Linha 46 corrigida: args em array (sem \)
+      run: dotnet publish ScreenSound.WebAssembly/ScreenSound.WebAssembly.csproj --configuration Release --output ./publish --no-build -r browser-wasm -p:PublishTrimmed=false
     
-    - name: Debug: Listar arquivos publish  # 👈 Pra ver se _framework tá lá
-      run: ls -la ./publish/wwwroot/_framework/
+    - name: Debug _framework
+      run: ls -la ./publish/wwwroot/_framework/ || echo "Pasta vazia"
     
-    - name: Setup Pages (só main)
+    - name: Setup Pages (main only)
       if: github.ref == 'refs/heads/main' && github.event_name == 'push'
       uses: actions/configure-pages@v5
     
-    - name: Upload artifact (só main)
+    - name: Upload artifact (main only)
       if: github.ref == 'refs/heads/main' && github.event_name == 'push'
       uses: actions/upload-pages-artifact@v3
       with:
         path: ./publish/wwwroot
     
-    - name: Deploy to GH Pages (só main)
+    - name: Deploy GH Pages (main only)
       if: github.ref == 'refs/heads/main' && github.event_name == 'push'
       uses: actions/deploy-pages@v4
