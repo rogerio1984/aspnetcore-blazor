@@ -1,4 +1,4 @@
-name: CI/CD Blazor WASM
+name: CI/CD Blazor WASMS
 on:
   push:
     branches: [ main, develop ]
